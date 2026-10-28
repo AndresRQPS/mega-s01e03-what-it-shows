@@ -1,0 +1,79 @@
+---
+layout: runbook
+title: '#4471 · what the merged reports really hold'
+owner: support desk
+status: open
+reviewed: 2026-10-28
+signature: v1.eyJzdWIiOiI1ODI5IiwiYXVkIjoiY2hhbGxlbmdlOndoYXQtaXQtc2hvd3MiLCJpYXQiOjE3OTMyMjkxOTYsImV4cCI6MTc5MzMxNTU5Nn0.2dPxsX77ta2vedGH-gNjMvbTJOUf_LfsVsRMfDoTj6o
+---
+
+<script>
+  import ProblemTable from '#lib/kb/ProblemTable.svelte';
+  import CauseTable from '#lib/kb/CauseTable.svelte';
+  import Callout from '#lib/kb/Callout.svelte';
+  import RenderStamp from '#lib/kb/RenderStamp.svelte';
+
+  const tickets = {
+    parser: { label: 'TICKET_PARSER', href: 'TICKET_PARSER_HREF' },
+    hint: { label: 'TICKET_HINT', href: 'TICKET_HINT_HREF' },
+    'one-day': { label: 'TICKET_ONEDAY', href: 'TICKET_ONEDAY_HREF' },
+  };
+</script>
+
+[#4471](/kb/incidents/4471) is marked known: one issue, one fix queued. It is not one issue. The
+desk merged on subject line ([decision 0001](/kb/decisions/0001-dedupe-by-subject)), and every
+report about a wrong date looks the same from its subject. Read by tenant, channel and body, the
+reports split into separate problems. Each needs its own fix, so each has its own ticket.
+
+<Callout kind="warn">
+The queued parser fix does not close #4471. It leaves the form hint and the one-day move open.
+</Callout>
+
+## The problems
+
+<ProblemTable ticket={4471} {tickets} />
+
+Counts come from the export at render time: unique report ids (the export repeats some), merged
+into #4471. A report is placed by its tenant's locale and booking form (`causes.ts`), except the
+reports the desk read as a one-day move (`desk-notes.json`), which are their own problem here.
+
+## How to tell them apart
+
+**`parser`: the shared parser reads month first.** Every tenant on file writes the day first. The
+parser reads `07/04` as 4 July, not 7 April, so day and month swap. It comes through every
+channel: app, email, and the booking-v2 form, whose hint already says `DD/MM/YYYY`. Fix: parse by
+the tenant's locale. This is the fix #4471 has queued.
+
+**`hint`: the booking-v3 form asks for the wrong order.** booking-v3 prints `MM/DD/YYYY` under its
+date field. The tenant's people type month first, as told, and the form reads it the tenant's way,
+day first. Day and month swap again, but only through the form, and only for tenants on
+booking-v3. The parser fix does not touch it. Fix: make the booking-v3 hint follow the tenant's
+locale.
+
+**`one-day`: dates move by one day, not by a swap.** A Tuesday shows as the Monday before. One
+client in Lisbon and one in Toronto got different days for the same meeting; an invite arrived
+before its booking was made; one tenant sees it only in June. That points at time zones, not at
+day and month order. Neither fix above touches it. Fix: find where the booking's time zone is lost
+between booking and invite.
+
+## What intake tagged
+
+Intake tags a report from the reporter's browser, the moment it arrives. The tag is a guess: it
+does not know the tenant or the form. The **intake tagged as** column above shows how often the
+guess is wrong. Do not split or count by intake tag.
+
+## The same reports, as #4471 shows them
+
+<CauseTable ticket={4471} />
+
+That table files the one-day move under its tenant's cause and footnotes it. That hides a
+problem with no fix queued.
+
+## Lessons
+
+- A matching subject line is not the same cause. Before you mark a big ticket known, place a
+  sample of its reports by tenant, channel and body.
+- A report that does not fit the pattern is a problem of its own until shown otherwise. Count
+  it, ticket it, do not footnote it.
+
+<RenderStamp {signature} />
