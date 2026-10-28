@@ -24,9 +24,11 @@ export const PROBLEMS: Record<Problem, { name: string; what: string }> = {
   },
 };
 
-export function problemOf(r: Report, t: Tenant | undefined, oneDayMove: readonly string[]): Problem {
-  if (oneDayMove.includes(r.id)) return 'one-day';
-  return causeOf(r, t) ?? 'unplaced';
+// A report counts where the desk files it (its cause), as the desk's own table counts it. A report
+// the desk read as a one-day move counts there too, as a problem of its own.
+export function problemsOf(r: Report, t: Tenant | undefined, oneDayMove: readonly string[]): Problem[] {
+  const filed: Problem = causeOf(r, t) ?? 'unplaced';
+  return oneDayMove.includes(r.id) ? [filed, 'one-day'] : [filed];
 }
 
 export type ProblemGroup = {
@@ -47,8 +49,7 @@ export function groupByProblem(
   const merged = uniqueById(all).filter((r) => r.mergedInto === ticket);
   const by = new Map<Problem, Report[]>();
   for (const r of merged) {
-    const p = problemOf(r, tenantOf(r), oneDayMove);
-    by.set(p, [...(by.get(p) ?? []), r]);
+    for (const p of problemsOf(r, tenantOf(r), oneDayMove)) by.set(p, [...(by.get(p) ?? []), r]);
   }
   return [...by.entries()]
     .map(([problem, rs]) => {

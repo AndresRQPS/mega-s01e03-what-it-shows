@@ -14,47 +14,59 @@ signature: v1.eyJzdWIiOiI1ODI5IiwiYXVkIjoiY2hhbGxlbmdlOndoYXQtaXQtc2hvd3MiLCJpYX
   import RenderStamp from '#lib/kb/RenderStamp.svelte';
 
   const tickets = {
-    parser: { label: 'parser · issue 1', href: 'https://github.com/AndresRQPS/mega-s01e03-what-it-shows/issues/1' },
-    hint: { label: 'hint · issue 2', href: 'https://github.com/AndresRQPS/mega-s01e03-what-it-shows/issues/2' },
-    'one-day': { label: 'one-day · issue 3', href: 'https://github.com/AndresRQPS/mega-s01e03-what-it-shows/issues/3' },
+    parser: { label: 'issue 1 · fixed', href: 'https://github.com/AndresRQPS/mega-s01e03-what-it-shows/issues/1' },
+    hint: { label: "issue 2 · won't fix", href: 'https://github.com/AndresRQPS/mega-s01e03-what-it-shows/issues/2' },
+    'one-day': { label: 'issue 3 · open', href: 'https://github.com/AndresRQPS/mega-s01e03-what-it-shows/issues/3' },
   };
 </script>
 
-[#4471](/kb/incidents/4471) is marked known: one issue, one fix queued. It is not one issue. The
+[#4471](/kb/incidents/4471) was marked known: one issue, one fix queued. It was not one issue. The
 desk merged on subject line ([decision 0001](/kb/decisions/0001-dedupe-by-subject)), and every
 report about a wrong date looks the same from its subject. Read by tenant, channel and body, the
 reports split into separate problems. Each needs its own fix, so each has its own ticket.
 
 <Callout kind="warn">
-The queued parser fix does not close #4471. It leaves the form hint and the one-day move open.
+#4471 is closed, but not every problem in it is. The one-day move has no fix and stays open.
 </Callout>
+
+## Where each problem stands
+
+Engineering closed #4471 on 5 October 2026.
+
+- **`parser`: fixed.** `fix(dates): parse dd/mm for eu locales`. Issue 1 is closed.
+- **`hint`: won't fix.** The booking-v3 form is retired, so its hint goes with it. Issue 2 is
+  closed as not planned.
+- **`one-day`: open.** The engineering update does not mention it, and neither change touches
+  time zones. Issue 3 stays open. Send new one-day reports there, not to #4471.
 
 ## The problems
 
 <ProblemTable ticket={4471} {tickets} />
 
-Counts come from the export at render time: unique report ids (the export repeats some), merged
-into #4471. A report is placed by its tenant's locale and booking form (`causes.ts`), except the
-reports the desk read as a one-day move (`desk-notes.json`), which are their own problem here.
+Counts come from the export at render time and match the desk's own count: unique report ids
+(the export repeats some), merged into #4471, each placed by its tenant's locale and booking form
+(`causes.ts`). The reports the desk read as a one-day move (`desk-notes.json`) stay counted where
+the desk filed them, and are counted again as their own problem, so the rows add up to more than
+the total.
 
 ## How to tell them apart
 
 **`parser`: the shared parser reads month first.** Every tenant on file writes the day first. The
 parser reads `07/04` as 4 July, not 7 April, so day and month swap. It comes through every
 channel: app, email, and the booking-v2 form, whose hint already says `DD/MM/YYYY`. Fix: parse by
-the tenant's locale. This is the fix #4471 has queued.
+the tenant's locale. Fixed: `fix(dates): parse dd/mm for eu locales`.
 
 **`hint`: the booking-v3 form asks for the wrong order.** booking-v3 prints `MM/DD/YYYY` under its
 date field. The tenant's people type month first, as told, and the form reads it the tenant's way,
 day first. Day and month swap again, but only through the form, and only for tenants on
-booking-v3. The parser fix does not touch it. Fix: make the booking-v3 hint follow the tenant's
-locale.
+booking-v3. The parser fix does not touch it. Won't fix: the booking-v3 form is retired. If a
+form like it comes back, its hint must follow the tenant's locale.
 
 **`one-day`: dates move by one day, not by a swap.** A Tuesday shows as the Monday before. One
 client in Lisbon and one in Toronto got different days for the same meeting; an invite arrived
 before its booking was made; one tenant sees it only in June. That points at time zones, not at
-day and month order. Neither fix above touches it. Fix: find where the booking's time zone is lost
-between booking and invite.
+day and month order. Neither change above touches it, so it is still open. Fix: find where the booking's
+time zone is lost between booking and invite.
 
 ## What intake tagged
 

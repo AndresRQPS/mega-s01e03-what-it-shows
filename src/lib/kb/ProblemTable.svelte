@@ -10,7 +10,8 @@
     $props();
 
   const groups = $derived(groupByProblem(reports as Report[], ticket, tenantOf, notes.oneDayMove));
-  const total = $derived(groups.reduce((n, g) => n + g.reports.length, 0));
+  // A report can sit in two rows (its cause and one-day), so count ids, not rows.
+  const total = $derived(new Set(groups.flatMap((g) => g.reports.map((r) => r.id))).size);
   const tags = (rs: Report[]) =>
     Object.entries(rs.reduce<Record<string, number>>((n, r) => ({ ...n, [r.meta.intakeTag]: (n[r.meta.intakeTag] ?? 0) + 1 }), {}))
       .sort((a, b) => b[1] - a[1])
