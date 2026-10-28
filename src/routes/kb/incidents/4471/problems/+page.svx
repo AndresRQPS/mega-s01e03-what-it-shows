@@ -14,9 +14,9 @@ signature: v1.eyJzdWIiOiI1ODI5IiwiYXVkIjoiY2hhbGxlbmdlOndoYXQtaXQtc2hvd3MiLCJpYX
   import RenderStamp from '#lib/kb/RenderStamp.svelte';
 
   const tickets = {
-    parser: { label: 'TICKET_PARSER', href: 'TICKET_PARSER_HREF' },
-    hint: { label: 'TICKET_HINT', href: 'TICKET_HINT_HREF' },
-    'one-day': { label: 'TICKET_ONEDAY', href: 'TICKET_ONEDAY_HREF' },
+    parser: { label: 'parser · issue 1', href: 'https://github.com/AndresRQPS/mega-s01e03-what-it-shows/issues/1' },
+    hint: { label: 'hint · issue 2', href: 'https://github.com/AndresRQPS/mega-s01e03-what-it-shows/issues/2' },
+    'one-day': { label: 'one-day · issue 3', href: 'https://github.com/AndresRQPS/mega-s01e03-what-it-shows/issues/3' },
   };
 </script>
 
